@@ -1,0 +1,13 @@
+# Ignora variáveis sensíveis
+terraform.tfvars
+
+# Ignora pastas temporárias do Terraform
+.terraform/
+
+# Ignora arquivos de estado (que podem conter credenciais)
+*.tfstate
+*.tfstate.backup
+crash.log
+
+# Ignora arquivos do VSCode
+.vscode/

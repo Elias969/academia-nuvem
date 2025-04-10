@@ -1,33 +1,47 @@
+terraform {
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 3.0"
+    }
+  }
+
+  required_version = ">= 1.4"
+}
+
 provider "azurerm" {
   features {}
+
+  subscription_id = var.subscription_id
+  client_id       = var.client_id
+  client_secret   = var.client_secret
+  tenant_id       = var.tenant_id
 }
 
 resource "azurerm_resource_group" "rg" {
   name     = "rg-academia"
-  location = "East US"
+  location = "Brazil South"
 }
 
-resource "azurerm_app_service_plan" "plan" {
-  name                = "asp-academia"
+resource "azurerm_service_plan" "plan" {
+  name                = "appserviceplan-academia"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
-  sku {
-    tier = "Basic"
-    size = "B1"
-  }
+  sku_name            = "F1"
+  os_type             = "Linux"
 }
 
-resource "azurerm_app_service" "app" {
-  name                = "app-academia"
+resource "azurerm_linux_web_app" "webapp" {
+  name                = "academia-app-web"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
-  app_service_plan_id = azurerm_app_service_plan.plan.id
+  service_plan_id     = azurerm_service_plan.plan.id
 
   site_config {
-    always_on = true
+    linux_fx_version = "DOCKER|nginx"
   }
 
   app_settings = {
-    "WEBSITE_RUN_FROM_PACKAGE" = "1"
+    "WEBSITES_ENABLE_APP_SERVICE_STORAGE" = "false"
   }
 }
