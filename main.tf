@@ -1,47 +1,41 @@
-terraform {
-  required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 3.0"
-    }
-  }
-
-  required_version = ">= 1.4"
-}
-
 provider "azurerm" {
   features {}
 
-  subscription_id = var.subscription_id
   client_id       = var.client_id
   client_secret   = var.client_secret
+  subscription_id = var.subscription_id
   tenant_id       = var.tenant_id
 }
 
 resource "azurerm_resource_group" "rg" {
-  name     = "rg-academia"
-  location = "Brazil South"
+  name     = "rg-academia-cloud"
+  location = "East US"
 }
 
-resource "azurerm_service_plan" "plan" {
-  name                = "appserviceplan-academia"
+resource "azurerm_service_plan" "app_service_plan" {
+  name                = "app-service-plan"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
-  sku_name            = "F1"
   os_type             = "Linux"
+  sku_name            = "B1"
 }
 
 resource "azurerm_linux_web_app" "webapp" {
-  name                = "academia-app-web"
-  location            = azurerm_resource_group.rg.location
+  name                = "nginx-webapp-cloud"
   resource_group_name = azurerm_resource_group.rg.name
-  service_plan_id     = azurerm_service_plan.plan.id
+  location            = azurerm_resource_group.rg.location
+  service_plan_id     = azurerm_service_plan.app_service_plan.id
 
   site_config {
-    linux_fx_version = "DOCKER|nginx"
+    application_stack {
+      docker_image     = "nginx"
+      docker_image_tag = "latest"
+    }
   }
 
   app_settings = {
     "WEBSITES_ENABLE_APP_SERVICE_STORAGE" = "false"
   }
+
+  https_only = true
 }
