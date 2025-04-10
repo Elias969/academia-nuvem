@@ -1,31 +1,30 @@
-name: Deploy to Azure with Terraform
+name: Build and Push Docker Image
 
 on:
   push:
     branches:
-      - main  # ou o nome do seu branch principal
+      - main
 
 jobs:
-  terraform:
+  build-and-push:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+      packages: write
+
     steps:
-    - name: Checkout do código
+    - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Instalar o Terraform
-      uses: hashicorp/setup-terraform@v3
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@v2
       with:
-        terraform_version: 1.5.0
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Inicializar o Terraform
-      run: terraform init
-
-    - name: Validar o Terraform
-      run: terraform validate
-
-    - name: Planejar a infraestrutura
-      run: terraform plan
-
-    - name: Aplicar a infraestrutura
-      run: terraform apply -auto-approve
+    - name: Build and push Docker image
+      run: |
+        docker build -t ghcr.io/${{ github.repository }}:latest .
+        docker push ghcr.io/${{ github.repository }}:latest
