@@ -1,33 +1,31 @@
-name: Deploy Azure App Service
+name: Deploy to Azure with Terraform
 
 on:
   push:
     branches:
-      - master
+      - main  # ou o nome do seu branch principal
 
 jobs:
-  build-and-deploy:
+  terraform:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout código
-      uses: actions/checkout@v2
+    - name: Checkout do código
+      uses: actions/checkout@v3
 
-    - name: Configurar Terraform
-      uses: hashicorp/setup-terraform@v2
+    - name: Instalar o Terraform
+      uses: hashicorp/setup-terraform@v3
       with:
-        terraform_version: 1.6.0
+        terraform_version: 1.5.0
 
-    - name: Login no Azure
-      uses: azure/login@v1
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-    - name: Init Terraform
+    - name: Inicializar o Terraform
       run: terraform init
 
-    - name: Plan Terraform
+    - name: Validar o Terraform
+      run: terraform validate
+
+    - name: Planejar a infraestrutura
       run: terraform plan
 
-    - name: Apply Terraform
+    - name: Aplicar a infraestrutura
       run: terraform apply -auto-approve
