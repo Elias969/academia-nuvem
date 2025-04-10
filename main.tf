@@ -28,8 +28,8 @@ resource "azurerm_linux_web_app" "webapp" {
 
   site_config {
     application_stack {
-      docker_image     = "ghcr.io/elias969/academia-nuvem.git"
-      docker_image_tag = "latest"
+      docker_image_name = "ghcr.io/elias969/academia-nuvem.git"
+      docker_registry_url = "https://ghcr.io"
     }
   }
 
