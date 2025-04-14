@@ -20,7 +20,7 @@ jobs:
       uses: docker/login-action@v2
       with:
         username: elias969
-        password: dckr_pat_sdHDUEFRCWmWxqbDsQueyL8e538abaixo
+        password: dckr_pat_sdHDUEFRCWmWxqbDsQueyL8e538
 
     - name: Build and Push Docker Image
       run: |
