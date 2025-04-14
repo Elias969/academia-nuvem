@@ -33,6 +33,6 @@ jobs:
 
     - name: Build and push Docker image
       run: |
-        IMAGE=ghcr.io/${{ github.repository }}:latest
+        IMAGE=ghcr.io/${{ github.repository | toLowerCase }}:latest  # Corrigido para minúsculas
         docker build -t $IMAGE .
         docker push $IMAGE
