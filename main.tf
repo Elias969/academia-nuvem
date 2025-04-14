@@ -27,11 +27,9 @@ resource "azurerm_linux_web_app" "webapp" {
   service_plan_id     = azurerm_service_plan.app_service_plan.id
 
   site_config {
-    application_stack {
-      docker_image     = "ghcr.io/Elias969/academia-nuvem.git"
-      docker_image_tag = "latest"
-    }
-  }
+  linux_fx_version = "DOCKER|ghcr.io/elias969/academia-nuvem:latest"
+}
+
 
   app_settings = {
     "WEBSITES_ENABLE_APP_SERVICE_STORAGE" = "false"
