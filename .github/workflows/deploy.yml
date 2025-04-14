@@ -19,8 +19,8 @@ jobs:
     - name: Log in to Docker Hub
       uses: docker/login-action@v2
       with:
-        username: ${{ secrets.DOCKER_USERNAME }} # Seu nome de usuário Docker Hub
-        password: ${{ secrets.DOCKER_HUB_TOKEN }} # O token de acesso gerado
+        username: ${{ secrets.elias969 }} # Seu nome de usuário Docker Hub
+        password: ${{ secrets.sdHDUEFRCWmWxqbDsQueyL8e538 }} # O token de acesso gerado
 
     - name: Build and Push Docker Image
       run: |
