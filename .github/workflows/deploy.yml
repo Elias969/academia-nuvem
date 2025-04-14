@@ -18,5 +18,7 @@ jobs:
 
     - name: Build and Push Docker Image
       run: |
-        docker build -t myimage:${{ github.repository.toLowerCase() }} .
-        docker push myimage:${{ github.repository.toLowerCase() }}
+        # Convert github.repository to lowercase
+        REPO_NAME=$(echo $GITHUB_REPOSITORY | tr '[:upper:]' '[:lower:]')
+        docker build -t myimage:$REPO_NAME .
+        docker push myimage:$REPO_NAME
