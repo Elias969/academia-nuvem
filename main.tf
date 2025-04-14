@@ -1,5 +1,5 @@
 provider "aws" {
-  region = "us-east-1"
+  region  = "us-east-1"
   profile = "default"
 }
 
@@ -51,7 +51,7 @@ resource "aws_route_table_association" "a" {
   route_table_id = aws_route_table.public.id
 }
 
-# Security Group
+# Security Group para a aplicação
 resource "aws_security_group" "web_sg" {
   name        = "academia-web-sg"
   description = "Permitir acesso HTTP"
@@ -74,6 +74,80 @@ resource "aws_security_group" "web_sg" {
 
   tags = {
     Name = "academia-web-sg"
+  }
+}
+
+# Security Group do Load Balancer
+resource "aws_security_group" "alb_sg" {
+  name        = "academia-alb-sg"
+  description = "Permitir acesso HTTP ao Load Balancer"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "academia-alb-sg"
+  }
+}
+
+# Load Balancer
+resource "aws_lb" "academia_alb" {
+  name               = "academia-alb"
+  internal           = false
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.alb_sg.id]
+  subnets            = [aws_subnet.public_subnet.id]
+
+  tags = {
+    Name = "academia-alb"
+  }
+}
+
+# Target Group
+resource "aws_lb_target_group" "academia_tg" {
+  name     = "academia-tg"
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.main.id
+
+  target_type = "ip"
+
+  health_check {
+    path                = "/"
+    protocol            = "HTTP"
+    matcher             = "200"
+    interval            = 30
+    timeout             = 5
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+  }
+
+  tags = {
+    Name = "academia-tg"
+  }
+}
+
+# Listener para o Load Balancer
+resource "aws_lb_listener" "alb_listener" {
+  load_balancer_arn = aws_lb.academia_alb.arn
+  port              = 80
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.academia_tg.arn
   }
 }
 
@@ -113,19 +187,15 @@ resource "aws_ecs_task_definition" "academia_task" {
   memory                   = "512"
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
 
-  container_definitions = jsonencode([
-    {
-      name      = "web"
-      image     = "ghcr.io/elias969/academia-nuvem:latest"
-      essential = true
-      portMappings = [
-        {
-          containerPort = 80
-          hostPort      = 80
-        }
-      ]
-    }
-  ])
+  container_definitions = jsonencode([{
+    name      = "web"
+    image     = "ghcr.io/elias969/academia-nuvem:latest"
+    essential = true
+    portMappings = [{
+      containerPort = 80
+      hostPort      = 80
+    }]
+  }])
 }
 
 # ECS Service
@@ -136,6 +206,12 @@ resource "aws_ecs_service" "academia_service" {
   launch_type     = "FARGATE"
   desired_count   = 1
 
+  load_balancer {
+    target_group_arn = aws_lb_target_group.academia_tg.arn
+    container_name   = "web"
+    container_port   = 80
+  }
+
   network_configuration {
     subnets         = [aws_subnet.public_subnet.id]
     security_groups = [aws_security_group.web_sg.id]
@@ -143,4 +219,9 @@ resource "aws_ecs_service" "academia_service" {
   }
 
   depends_on = [aws_iam_role_policy_attachment.ecs_task_execution_role_policy]
+}
+
+# Output do DNS do Load Balancer
+output "alb_dns_name" {
+  value = aws_lb.academia_alb.dns_name
 }
